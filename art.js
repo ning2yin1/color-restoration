@@ -1,3 +1,4 @@
+import {outlines} from './outlines.js';
 // Flat-color original artwork. Each palette index is an independently restorable region.
 const p=(color,shape)=>({color,shape});
 export const artworks=[
@@ -15,5 +16,8 @@ export const artworks=[
 {id:'orchard',title:'実りの静物',description:'土の器と、熟した果実。秋の午後をひとつだけ。',difficulty:'ふつう',colors:['#B9BCA5','#827366','#CC965F','#A86559','#687C60','#DED0AC'],regions:['壁','机','梨','林檎','葉と茎','器'],parts:[p(0,'<rect width="400" height="300"/>'),p(1,'<rect y="219" width="400" height="81"/>'),p(2,'<path d="M153 115C137 115 145 145 125 165C105 184 113 215 144 218C177 224 194 195 175 172C157 151 170 119 153 115Z"/>'),p(4,'<path d="M151 122Q145 103 155 96L162 102Q153 109 158 122Z"/>'),p(3,'<path d="M230 160C196 144 181 173 190 198C198 220 217 223 233 216C250 226 277 208 277 182C277 158 253 148 230 160Z"/>'),p(4,'<path d="M228 165L225 144 231 142 235 164ZM231 151Q247 124 267 139Q252 158 231 151Z"/>'),p(5,'<path d="M99 217H300Q285 252 200 253Q121 252 99 217Z"/>')]}
 ];
 export function painting(work,{target=-1,color=null,highlight=false}={}) {
-return `<svg viewBox="0 0 400 300" role="img" aria-label="${work.title}" xmlns="http://www.w3.org/2000/svg">${work.parts.map(part=>`<g fill="${part.color===target&&color?color:work.colors[part.color]}" stroke="${part.color===target&&color?color:work.colors[part.color]}" stroke-width="0">${part.shape}</g>`).join('')}${highlight?work.parts.filter(p=>p.color===target).map(p=>`<g fill="none" stroke="#fff" stroke-width="2.5" stroke-dasharray="6 5" class="target-outline">${p.shape}</g>`).join(''):''}</svg>`;
+const outline=highlight?outlines[work.id]?.[target]:null;
+// The generated path is the boundary of the combined filled/stroked silhouette.
+// Individual SVG parts never receive the highlight stroke.
+return `<svg viewBox="0 0 400 300" role="img" aria-label="${work.title}" xmlns="http://www.w3.org/2000/svg">${work.parts.map(part=>`<g fill="${part.color===target&&color?color:work.colors[part.color]}" stroke="${part.color===target&&color?color:work.colors[part.color]}" stroke-width="0">${part.shape}</g>`).join('')}${outline?`<path d="${outline}" fill="none" stroke="#fff" stroke-width="2.5" stroke-dasharray="6 5" stroke-linejoin="round" class="target-outline"/>`:''}</svg>`;
 }

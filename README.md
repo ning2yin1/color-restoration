@@ -38,6 +38,7 @@ Service Workerはネットワーク優先で、通信失敗時に保存済みフ
 
 - `index.html` / `style.css` / `script.js`: 画面、レスポンシブUI、ゲームと保存処理
 - `art.js`: 12作品のSVG構図、パレット、領域データ
+- `outlines.js`: 修復対象パーツの合成シルエットから生成した外周パス
 - `color.js`: HSL変換・OKLab変換・採点
 - `audio.js`: Web Audio効果音、任意BGM管理
 - `manifest.json` / `sw.js` / `assets/icon*`: PWA、オフライン、アイコン
@@ -65,6 +66,7 @@ node --test tests/color.test.mjs
 # PlaywrightとChromiumがインストールされた開発環境で、上記HTTPサーバー起動中に実行
 node tests/browser.cjs
 node tests/viewport-audio.cjs
+node tests/outlines.cjs
 ```
 
 ブラウザテストはPlaywrightパッケージが必要です（アプリ自体には不要）。既定では `/usr/bin/chromium` を使い、別の場所にある場合は `CHROMIUM_PATH` を指定できます。Node.js 22以上を推奨します。
@@ -74,3 +76,17 @@ node tests/viewport-audio.cjs
 追加確認済み: Chromiumで1920×1080、1366×768、390×844、375×667と375×567の原画確認・調色両画面のスクロールなし／全要素表示、タッチによるスライダー操作、BGMの操作後再生・ループ・画面切替時の継続・独立音量設定保存、オフラインMP3再生と206バイト範囲応答、音源404時のプレイ。
 
 未確認: iPhone Safari / Android実機、実機でのPWAインストール。公開前に実機で音量・タッチ操作・インストールを確認してください。
+
+## 修復対象の点線輪郭
+
+同じ修復対象の塗り面・線を4倍解像度で合成し、透明部分との境界を追跡してSVGの輪郭パスを生成しています。重なるパーツの内部境界は合成時に消え、離れた領域や穴はそれぞれの境界を保持します。輪郭の簡略化誤差は最大0.125 SVG単位です。ゲームでは生成済みのパスを直接表示するため、実行時のCanvas処理や外部ライブラリは不要です。点線は白・幅2.5・間隔6/5を維持し、角の継ぎ目を丸くしています。
+
+作品のパーツ・修復対象を変更／追加したら、PlaywrightとChromiumがある開発環境で次を実行して生成ファイルを更新してください。
+
+```sh
+node tools/generate-outlines.cjs
+node --test tests/color.test.mjs
+node tests/outlines.cjs
+```
+
+`node tools/generate-outlines.cjs --check` で生成結果の一致も確認できます。作品データのハッシュをテストするため、輪郭の更新漏れは検出されます。輪郭テストは全12作品・64対象について、内部に不要な線が出ていないことを画素で検証し、旧方式の黒猫では実際に不合格になることも確認します。PC・スマホの画面サイズで全対象を表示して検証します。iPhone Safari実機の検証は別途必要です。

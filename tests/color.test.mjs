@@ -5,3 +5,18 @@ import {artworks,painting} from '../art.js';
 test('HSL primary colors and endpoints',()=>{assert.equal(hslToHex(0,100,50),'#ff0000');assert.equal(hslToHex(120,100,50),'#00ff00');assert.equal(hslToHex(240,100,50),'#0000ff');assert.equal(hslToHex(180,30,0),'#000000');assert.equal(hslToHex(180,30,100),'#ffffff')});
 test('OKLab reference red and score bounds',()=>{const red=oklab('#ff0000');assert.ok(Math.abs(red[0]-.62795536)<1e-7);assert.ok(Math.abs(red[1]-.22486306)<1e-7);assert.ok(Math.abs(red[2]-.1258463)<1e-7);assert.equal(score('#123456','#123456'),100);assert.equal(score('#000000','#ffffff'),0);assert.ok(score('#aabbcc','#aabbcd')>99);assert.equal(score('#aabbcc','#cc9988'),score('#cc9988','#aabbcc'));assert.equal(verdict(0),'新たな解釈')});
 test('twelve works and every target changes only its own regions',()=>{assert.equal(artworks.length,12);for(const w of artworks){assert.equal(w.regions.length,w.colors.length);assert.ok(w.colors.length>=3&&w.colors.length<=7);for(let target=0;target<w.colors.length;target++){assert.ok(w.parts.some(p=>p.color===target));const svg=painting(w,{target,color:'#ff00ff'});const groups=[...svg.matchAll(/<g fill="([^"]+)"/g)].map(m=>m[1]);assert.deepEqual(groups,w.parts.map(p=>p.color===target?'#ff00ff':w.colors[p.color]))}}});
+
+// A stale outline must fail when artwork geometry is changed or new targets are added.
+import {createHash} from 'node:crypto';
+import {outlines,outlineSourceHash} from '../outlines.js';
+test('composite outlines match every artwork and target',()=>{
+ assert.equal(outlineSourceHash,createHash('sha256').update(JSON.stringify(artworks)).digest('hex'));
+ for(const w of artworks){assert.equal(outlines[w.id].length,w.colors.length);
+  for(let target=0;target<w.colors.length;target++){
+   assert.ok(outlines[w.id][target].startsWith('M'));
+   const svg=painting(w,{target,highlight:true});
+   assert.equal((svg.match(/class="target-outline"/g)||[]).length,1);
+   assert.ok(svg.includes('stroke-width="2.5" stroke-dasharray="6 5"'));
+  }
+ }
+});
