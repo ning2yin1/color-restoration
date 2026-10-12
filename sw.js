@@ -1,4 +1,4 @@
-const CACHE='color-atelier-v4';
+const CACHE='color-atelier-v5';
 const FILES=['./','./index.html','./style.css','./script.js','./art.js','./outlines.js','./color.js','./audio.js','./manifest.json','./assets/icon.svg','./assets/icon-192.png','./assets/icon-512.png'];
 const BGM=new URL('./assets/audio/Café Piano.mp3',self.location).href;
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(async cache=>{await cache.addAll(FILES);try{await cache.add(BGM)}catch{/* Missing music must not prevent offline game installation. */}}))});
